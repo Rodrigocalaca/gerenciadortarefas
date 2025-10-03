@@ -64,3 +64,42 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
+
+  deploy-staging:
+    name: Deploy em Homologação
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.gerenciador-tarefas.com
+
+    env:
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Deploy para ambiente de Staging
+        run: |
+          echo "Deploy para Staging..."
+          echo "Baixando imagem: ghcr.io/${{ env.REPO }}:${{ github.sha }}"
+          # Exemplo (placeholder):
+          # ssh user@staging 'docker login ghcr.io -u USER -p TOKEN && docker pull ghcr.io/<repo>:<sha> && docker stop app || true && docker rm app || true && docker run -d -p 80:8080 --name app ghcr.io/<repo>:<sha>'
+
+  deploy-production:
+    name: Deploy em Produção
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://gerenciador-tarefas.com
+
+    env:
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Deploy para ambiente de Produção
+        run: |
+          echo "Deploy para Produção..."
+          echo "Baixando imagem: ghcr.io/${{ env.REPO }}:${{ github.sha }}"
+          # Mesmo script de cima, apontando para o host de produção
